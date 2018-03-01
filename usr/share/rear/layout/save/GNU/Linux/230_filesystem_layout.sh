@@ -61,10 +61,7 @@ read_filesystems_command="$read_filesystems_command | sort -t ' ' -k 1,1 -u"
             continue
         fi
         # FIXME: I (jsmeix@suse.de) have no idea what the reason for the following is.
-        # In an ancient code version, the full mount command output was parsed line by line
-        # At that time the code was [ "${line#/}" = "$line" ]
-        # Then it skipped each mount line that didn't start with a forward slash (/)
-        # https://github.com/rear/rear/blame/e8de02b1c791f4d6b3de6d0d38529eb72375c2f6/usr/share/rear/layout/save/GNU/Linux/23_filesystem_layout.sh
+        # If someone knows the reason replace this comment with a description of the the actual root cause.
         if [ "${device#/}" = "$device" ] ; then
             Log "\${device#/} = '${device#/}' = \$device, skipping."
             continue
@@ -127,8 +124,7 @@ read_filesystems_command="$read_filesystems_command | sort -t ' ' -k 1,1 -u"
                 max_mounts=$( $tunefs -l $device | tr -d '[:blank:]' | grep -i 'Maximummountcount:[0-9]*' | cut -d ':' -f 2 )
                 echo -n " max_mounts=$max_mounts"
                 check_interval=$( $tunefs -l $device | tr -d '[:blank:]' | grep -i 'Checkinterval:[0-9]*' | cut -d ':' -f 2 | cut -d '(' -f1 )
-                # is_integer outputs '0' if its (first) argument is not an integer (or empty)
-                check_interval=$( is_integer $check_interval )
+                check_interval=$( is_numeric $check_interval )  # if non-numeric 0 is returned
                 # translate check_interval from seconds to days
                 let check_interval=$check_interval/86400
                 echo -n " check_interval=${check_interval}d"
@@ -150,10 +146,7 @@ read_filesystems_command="$read_filesystems_command | sort -t ' ' -k 1,1 -u"
                 uuid=$(xfs_admin -u $device | cut -d'=' -f 2 | tr -d " ")
                 label=$(xfs_admin -l $device | cut -d'"' -f 2)
                 echo -n " uuid=$uuid label=$label "
-                # Save current XFS file system options.
-                # Saved options will be later used in ReaR recovery system for
-                # file system re-creation.
-                xfs_info $mountpoint > $LAYOUT_XFS_OPT_DIR/$(basename ${device}.xfs)
+                xfs_info $device > $LAYOUT_XFS_OPT_DIR/$(basename ${device}.xfs)
                 StopIfError "Failed to save XFS options of $device"
                 ;;
             (reiserfs)
@@ -311,7 +304,7 @@ read_filesystems_command="$read_filesystems_command | sort -t ' ' -k 1,1 -u"
         # see https://github.com/rear/rear/issues/883
         # therefore use by default the traditional mount command
         read_mounted_btrfs_subvolumes_command="mount -t btrfs | cut -d ' ' -f 1,3,6"
-        # and use findmnt only if "findmnt -o FSROOT" works:
+        # and use findmnd only if "findmnd -o FSROOT" works:
         # Use the (deprecated) "findmnt -m" to avoid issues
         # as in https://github.com/rear/rear/issues/882
         # FIXME: Replace using the deprecated '-m' option with a future proof solution.
@@ -395,7 +388,7 @@ read_filesystems_command="$read_filesystems_command | sort -t ' ' -k 1,1 -u"
                     # (i.e. a subvolume path is an absolute path in the particular btrfs filesystem)
                     # see https://btrfs.wiki.kernel.org/index.php/Mount_options
                     test "/" != "$btrfs_subvolume_path" && btrfs_subvolume_path=${btrfs_subvolume_path#/}
-                    if test -n "$btrfs_subvolume_path" ; then
+                    if test -n "btrfs_subvolume_path" ; then
 			# Add the following binaries to the rescue image in order to be able to change required attrs uppon recovery.
                         for p in chattr lsattr
                         do

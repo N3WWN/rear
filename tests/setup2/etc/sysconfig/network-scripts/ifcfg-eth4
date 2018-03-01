@@ -1,5 +1,0 @@
-NAME="eth4"
-DEVICE="eth4"
-ONBOOT="yes"
-MASTER="bond34"
-SLAVE="yes"

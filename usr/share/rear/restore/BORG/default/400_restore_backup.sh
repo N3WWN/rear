@@ -5,8 +5,8 @@
 
 # Borg restores to cwd.
 # Switch current working directory or die.
-pushd $TARGET_FS_ROOT >/dev/null
-StopIfError "Could not change directory to $TARGET_FS_ROOT"
+cd $TARGET_FS_ROOT
+StopIfError "Could not change directory to /mnt/local"
 
 # Start actual restore.
 # Scope of LC_ALL is only within run of `borg extract'.
@@ -14,11 +14,9 @@ StopIfError "Could not change directory to $TARGET_FS_ROOT"
 # and should not interfere with remaining stages of rear recover.
 # This is still not the ideal solution, but best I can think of so far :-/.
 LogPrint "Recovering from Borg archive $BORGBACKUP_ARCHIVE"
-
 LC_ALL=rear.UTF-8 \
 borg extract --sparse $BORGBACKUP_OPT_REMOTE_PATH \
-${borg_dst_dev}${BORGBACKUP_REPO}::$BORGBACKUP_ARCHIVE
+$BORGBACKUP_USERNAME@$BORGBACKUP_HOST:$BORGBACKUP_REPO::$BORGBACKUP_ARCHIVE
+StopIfError "Could not successfully finish Borg restore"
 
-LogPrintIfError "Error was reported during Borg restore"
 LogPrint "Borg OS restore finished successfully"
-popd >/dev/null

@@ -1,5 +1,0 @@
-DEVICE="bond12"
-BOOTPROTO="none"
-ONBOOT="yes"
-TYPE="Ethernet"
-BONDING_OPTS="mode=4 miimon=1000"

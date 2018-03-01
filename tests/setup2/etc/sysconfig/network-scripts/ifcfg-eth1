@@ -1,5 +1,0 @@
-NAME="eth1"
-DEVICE="eth1"
-ONBOOT="yes"
-MASTER="bond12"
-SLAVE="yes"

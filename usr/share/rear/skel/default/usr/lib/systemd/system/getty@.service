@@ -40,5 +40,4 @@ Environment=LANG= LANGUAGE= LC_CTYPE= LC_NUMERIC= LC_TIME= LC_COLLATE= LC_MONETA
 KillSignal=SIGHUP
 
 [Install]
-WantedBy=getty.target
-DefaultInstance=%I
+Alias=getty.target.wants/getty@tty1.service

@@ -20,23 +20,31 @@ if [ "$BACKUP_PROG" = "duplicity" ] ; then
     # make backup using the DUPLICITY method with duplicity
     # by falk hoeppner
 
-    if [ -n "$BACKUP_DUPLICITY_ASK_PASSPHRASE" ]; then
-        LogPrint "Warning !
-    BACKUP_DUPLICITY_ASK_PASSPHRASE set, The Passphrase needs to be provided Interactively on Restore."
-    fi
-
     LogPrint "Creating $BACKUP_PROG archives on '$BACKUP_DUPLICITY_URL'"
 
-    # todo: check parameters
-    BKP_URL="$BACKUP_DUPLICITY_URL"
-    
-    DUP_OPTIONS="$BACKUP_DUPLICITY_OPTIONS"
+    # using some new parameters from config.local
+    #
+    # DUPLICITY_USER
+    # DUPLICITY_HOST
+    # DUPLICITY_PROTO
+    # DUPLICITY_PATH
+    # BACKUP_DUPLICITY_URL
 
-    if [ -n "$BACKUP_DUPLICITY_GPG_ENC_KEY" ]; then
-        GPG_KEY="--encrypt-key $BACKUP_DUPLICITY_GPG_ENC_KEY"
+    if [ -n $DUPLICITY_USER -a -n $DUPLICITY_HOST -a -n $DUPLICITY_PROTO -a -n $DUPLICITY_PATH ] ; then
+        BKP_URL="$BACKUP_DUPLICITY_URL"
+        # ToDo: do some more plausibility checks !?
+    else
+        Error "Parameters for BACKUP_DUPLICITY_URL not set correctly, please look at config.local template"
     fi
+
+    # todo: check parameters
+    DUP_OPTIONS="$BACKUP_DUPLICITY_OPTIONS"
+    #
+    GPG_OPT="${BACKUP_DUPLICITY_GPG_OPTIONS}"
+    GPG_KEY="$BACKUP_DUPLICITY_GPG_ENC_KEY"
     PASSPHRASE="$BACKUP_DUPLICITY_GPG_ENC_PASSPHRASE"
 
+    LogUserOutput "GPG_OPT = $GPG_OPT"
 
     # EXCLUDES="${TMP_DIR}/backup_exclude.lst"
 
@@ -67,28 +75,23 @@ if [ "$BACKUP_PROG" = "duplicity" ] ; then
     # given user is allowed to create directories/files this way !!
     # maybe better done in an if or case statement
     #
-    if [[ $BKP_URL == ssh://* ]] || [[ $BKP_URL == rsync://* ]] || [[ $BKP_URL == fish://* ]] ; then
-        LogPrint "Checking backup-path at server ..."
-        ssh ${DUPLICITY_USER}@${DUPLICITY_HOST} "test -d ${DUPLICITY_PATH}/${HOSTNAME} || mkdir -p ${DUPLICITY_PATH}/${HOSTNAME}"
-    fi
+    LogPrint "Checking backup-path at server ..."
+    ssh ${DUPLICITY_USER}@${DUPLICITY_HOST} "test -d ${DUPLICITY_PATH}/${HOSTNAME} || mkdir -p ${DUPLICITY_PATH}/${HOSTNAME}"
 
     # first remove everything older than $BACKUP_DUPLICITY_MAX_TIME
-    if [ -n "$BACKUP_DUPLICITY_MAX_TIME" ] ; then
-        LogPrint "Removing the old stuff from server with CMD:
-    $DUPLICITY_PROG remove-older-than $BACKUP_DUPLICITY_MAX_TIME -v5 $BKP_URL/$HOSTNAME"
-        $DUPLICITY_PROG remove-older-than $BACKUP_DUPLICITY_MAX_TIME -v5 $BKP_URL/$HOSTNAME >> ${TMP_DIR}/${BACKUP_PROG_ARCHIVE}.log
+    if [ -z $BACKUP_DUPLICITY_MAX_TIME ] ; then
+        # default: remove old backup after 2 month
+        BACKUP_DUPLICITY_MAX_TIME=2M
     fi
+    LogPrint "Removing the old stuff from server with CMD:
+    $DUPLICITY_PROG remove-older-than $BACKUP_DUPLICITY_MAX_TIME -v5 $BKP_URL/$HOSTNAME"
+    $DUPLICITY_PROG remove-older-than $BACKUP_DUPLICITY_MAX_TIME -v5 $BKP_URL/$HOSTNAME >> ${TMP_DIR}/${BACKUP_PROG_ARCHIVE}.log
 
     # do the backup
-    if [[ "$BACKUP_DUPLICITY_GPG_OPTIONS" ]] ; then
-        LogPrint "Running CMD: $DUPLICITY_PROG -v5 $DUP_OPTIONS $GPG_KEY --gpg-options ${BACKUP_DUPLICITY_GPG_OPTIONS} $EXCLUDES / $BKP_URL/$HOSTNAME >> ${TMP_DIR}/${BACKUP_PROG_ARCHIVE}.log "
-        $DUPLICITY_PROG -v5 $DUP_OPTIONS $GPG_KEY --gpg-options "${BACKUP_DUPLICITY_GPG_OPTIONS}" $EXCLUDES \
+    LogPrint "Running CMD: $DUPLICITY_PROG -v5 $DUP_OPTIONS --encrypt-key $GPG_KEY $GPG_OPT $EXCLUDES \
+     / $BKP_URL/$HOSTNAME >> ${TMP_DIR}/${BACKUP_PROG_ARCHIVE}.log "
+    $DUPLICITY_PROG -v5 $DUP_OPTIONS --encrypt-key $GPG_KEY $GPG_OPT $EXCLUDES \
            / $BKP_URL/$HOSTNAME >> ${TMP_DIR}/${BACKUP_PROG_ARCHIVE}.log 2>&1
-    else
-        LogPrint "Running CMD: $DUPLICITY_PROG -v5 $DUP_OPTIONS $GPG_KEY $EXCLUDES / $BKP_URL/$HOSTNAME >> ${TMP_DIR}/${BACKUP_PROG_ARCHIVE}.log "
-        $DUPLICITY_PROG -v5 $DUP_OPTIONS $GPG_KEY $EXCLUDES \
-           / $BKP_URL/$HOSTNAME >> ${TMP_DIR}/${BACKUP_PROG_ARCHIVE}.log 2>&1
-    fi
 
     RC_DUP=$?
 

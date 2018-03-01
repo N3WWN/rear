@@ -1,5 +1,0 @@
-NAME="eth9"
-DEVICE="eth9"
-ONBOOT="yes"
-BOOTPROTO="none"
-TYPE="Ethernet"
