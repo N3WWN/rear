@@ -1,5 +1,0 @@
-# Store settings for the PBA runtime
-
-cat > "$ROOTFS_DIR/.OPAL_PBA_SETTINGS.sh" << -EOF-
-OPAL_PBA_DEBUG_PASSWORD="$OPAL_PBA_DEBUG_PASSWORD"
--EOF-

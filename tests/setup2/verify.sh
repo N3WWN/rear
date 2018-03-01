@@ -1,1 +1,0 @@
-../setup1/verify.sh

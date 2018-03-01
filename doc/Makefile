@@ -1,13 +1,9 @@
-SHELL=/bin/bash
-
 prefix = /usr
 datadir = $(prefix)/share
 mandir = $(datadir)/man
 
 adoctargets = $(shell echo *.adoc)
 htmltargets = $(patsubst %.adoc, %.html, $(adoctargets))
-
-asciidoc := $(shell if type -p asciidoctor >/dev/null; then echo asciidoctor; else echo asciidoc; fi)
 
 all: docs
 
@@ -26,18 +22,13 @@ clean:
 	make -C user-guide clean
 
 %.8.html: %.8.adoc
-	$(asciidoc) -a footer-style=none -d manpage $<
-
-ifeq ($(asciidoc),asciidoc)
-%.8.xml: %.8.adoc
-	$(asciidoc) -b docbook -d manpage $<
+	asciidoc -a footer-style=none -d manpage $<
 
 %.8: %.8.xml
 	xmlto man $<
-else
-%.8: %.8.adoc
-	$(asciidoc) -b manpage -d manpage $<
-endif
 
 %.html: %.adoc
-	$(asciidoc) -a footer-style=none $<
+	asciidoc -a footer-style=none $<
+
+%.8.xml: %.8.adoc
+	asciidoc -b docbook -d manpage $<

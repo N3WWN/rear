@@ -1,6 +1,6 @@
 = rear(8)
-:version: v2.3
-:date: 14 December 2017
+:version: v2.2
+:date: 20 July 2017
 :data-uri:
 :doctype: manpage
 :lang: en
@@ -28,7 +28,7 @@ Currently Relax-and-Recover supports various boot media (incl. ISO, PXE,
 OBDR tape, USB or eSATA storage), a variety of network protocols (incl.
 sftp, ftp, http, nfs, cifs) for storage and backup as well as a multitude
 of backup strategies (incl.  IBM Tivoli Storage Manager, HP DataProtector,
-Symantec NetBackup, EMC NetWorker, EMC Avamar, FDR/Upstream, NovaBACKUP DC, Bareos,
+Symantec NetBackup, EMC NetWorker, FDR/Upstream, NovaBACKUP DC, Bareos,
 Bacula, rsync, rbme, Borg). This results in a bootable image that is capable of
 booting via PXE, DVD/CD, bootable tape or virtual provisioning.
 
@@ -122,12 +122,6 @@ the GNU General Public License at: http://www.gnu.org/licenses/gpl.html
 *restoreonly*::
     only restore the backup; can be used only when running from the rescue media
 
-*mkopalpba*::
-    create a pre-boot authentication (PBA) image to boot from TCG Opal 2-compliant self-encrypting disks
-
-*opaladmin*::
-    administrate TCG Opal 2-compliant self-encrypting disks
-
 *validate*::
     submit validation information
 
@@ -157,9 +151,9 @@ source or commercial) or rsync with hardlink based solutions, e.g. RSYNC
 BACKUP MADE EASY.
 
 == RESCUE IMAGE CONFIGURATION
-The +OUTPUT+ variable defines from where our bootable rescue image will be
-booted and the +OUTPUT_URL+ variable defines where the rescue image should be
-send to. Possible +OUTPUT+ settings are:
+The +OUTPUT+ variable defines from where our bootable rescue image will be booted and
+the +OUTPUT_URL+ variable defines where the rescue image should be send to.
+Possible +OUTPUT+ setting are:
 
 OUTPUT=*RAMDISK*::
 Create only the Relax-and-Recover initramfs.
@@ -179,17 +173,9 @@ OUTPUT=*USB*::
 Create a bootable USB disk (using extlinux). Specify the USB storage
 device by using +USB_DEVICE+.
 
-OUTPUT=*RAWDISK*::
-Create a bootable image file named "rear-$(hostname).raw.gz", which
-
-* supports UEFI boot if syslinux/EFI or Grub 2/EFI is installed,
-* supports Legacy BIOS boot if syslinux is installed,
-* supports UEFI/Legacy BIOS dual boot if syslinux *and* one of the supported EFI
-  bootloaders are installed.
-
-When using +OUTPUT=ISO+, +RAMDISK+, +OBDR+, +USB+, or +RAWDISK+ you should
-provide the backup target location through the +OUTPUT_URL+ variable. Possible
-+OUTPUT_URL+ settings are:
+When using +OUTPUT=ISO+, +RAMDISK+, +OBDR+ or +USB+ you should provide the
+backup target location through the +OUTPUT_URL+ variable. Possible +OUTPUT_URL+
+settings are:
 
 OUTPUT_URL=*file://*::
 Write the image to disk. The default is in _/var/lib/rear/output/_.
@@ -228,51 +214,22 @@ OUTPUT_URL=*sshfs://*::
 Write the image using sshfs and the SSH protocol.
 
 OUTPUT_URL=*null*::
-Do not copy the rescue image from _/var/lib/rear/output/_ to a remote output location.
+Do not copy the ISO image from _/var/lib/rear/output/_ to a remote output location.
 +OUTPUT_URL=null+ is useful when another program (e.g. an _external_ backup program)
-is used to save the rescue image from the local system to a remote place,
-or with +BACKUP_URL=iso:///backup+ when the backup is included in the rescue image
-to avoid a (big) copy of the rescue image at a remote output location.
-In the latter case the rescue image must be manually saved from the local system to a remote place.
+is used to save the ISO image from the local system to a remote place,
+or with +BACKUP_URL=iso:///backup+ when the backup is included in the ISO image
+to avoid a (big) copy of the ISO image at a remote output location.
+In the latter case the ISO image must be manually saved from the local system to a remote place.
 +OUTPUT_URL=null+ is only supported together with +BACKUP=NETFS+.
 
 If you do not specify +OUTPUT_URL+ variable then by default it will be aligned to what
-was defined by variable +BACKUP_URL+. And, the rescue image will then be copied to the same
+was defined by variable +BACKUP_URL+. And, the ISO image will then be copied to the same
 location as your backup of the system disk(s).
 
 The +ISO_DEFAULT+ variable defines what default boot option is used on the rescue image.
 Possible values are `manual`, `boothd` or `automatic`. Manual will make you boot into
 the shell directly by default, boothd will boot to the first disk (default) or automatic
 will automatically start in recovery mode.
-
-== RESCUE IMAGE KERNEL COMMAND LINE OPTIONS
-When booting the rescue image you can edit the kernel command line.
-There are some Relax-and-Recover specific kernel command line options:
-
-*debug*::
-The rescue system start up scripts in /etc/scripts/system-setup.d/
-are run one by one each one after pressing 'Enter' and
-the scripts are run with 'set -x' which prints commands
-and their arguments as they are executed.
-
-*auto_recover* or *automatic*::
-Launch 'rear recover' automatically (without automated reboot).
-Together with 'debug' it runs 'rear recover' in debug mode.
-
-*unattended*::
-Launch 'rear recover' automatically as with 'auto_recover'
-plus automated reboot after successful 'rear recover'.
-
-*ip= nm= netdev= gw=*::
-If IP address plus optionally netmask (default 255.255.255.0),
-network device (default eth0), and a default gateway are specified
-only that single network device is set up. Example:
-----
-ip=192.168.100.2 nm=255.255.255.0 netdev=eth0 gw=192.168.100.1
-----
-
-*noip*::
-Skip network devices setup by the rescue system start up scripts (overrides ip= nm= netdev= gw=).
 
 == BACKUP SOFTWARE INTEGRATION
 Currently Relax-and-Recover supports the following backup methods. Please
@@ -331,9 +288,6 @@ result files (e.g. ISO image) are also saved into TSM.
 BACKUP=*NSR*::
 Using EMC NetWorker (Legato) to restore the data.
 
-BACKUP=*AVA*::
-Using EMC Avamar to restore the data.
-
 BACKUP=*SESAM*::
 Using SEP Sesam to restore the data.
 
@@ -344,7 +298,7 @@ BACKUP=*RBME*::
 Use Rsync Backup Made Easy (rbme) to restore the data.
 
 BACKUP=*BAREOS*::
-Use Open Source backup solution BAREOS (a fork a BACULA) to restore the data.
+Use Open Source backup solution BAREOS (a fork a BUCULA) to restore the data.
 
 BACKUP=*BACULA*::
 Use Open Source backup solution BACULA to restore the data.
@@ -435,27 +389,6 @@ Incremental or differential backup is currently only known to work
 with +BACKUP_URL=nfs+. Other BACKUP_URL schemes may work but
 at least +BACKUP_URL=usb+ requires USB_SUFFIX to be set
 to work with incremental or differential backup.
-
-== SUPPORT FOR SELF-ENCRYPTING DISKS
-
-Relax-and-Recover supports self-encrypting disks (SEDs) compliant with the TCG
-Opal 2 specification if the `sedutil-cli` executable is installed.
-
-Self-encrypting disk support includes
-
-* recovery (saving and restoring the system's SED configuration),
-* setting up SEDs, including assigning a disk password,
-* providing a pre-boot authentication (PBA) system to unlock SEDs at boot time.
-
-To prepare booting from an SED, run +rear mkopalpba+, then create the rescue
-system.
-
-To set up an SED, boot the Relax-and-Recover rescue system and run`rear
-opaladmin setupERASE DEVICE` (_DEVICE_ being the disk device path like
-`/dev/sda`).
-
-For complete information, consult the section "Support for TCG Opal 2-compliant
-Self-Encrypting Disks" in the Relax-and-Recover user guide.
 
 == CONFIGURATION
 To configure Relax-and-Recover you have to edit the configuration files in
@@ -581,7 +514,7 @@ The Relax-and-Recover website is located at: http://relax-and-recover.org/
 
 
 == COPYRIGHT
-(c) 2006-2018
+(c) 2006-2017
 
 The copyright is held by the original authors of the respective code pieces as can be seen in the git history at https://github.com/rear/rear/graphs/contributors
 

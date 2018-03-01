@@ -1,10 +1,7 @@
 # Use the dependencies to order device creation and generate code for them.
 
-# LAYOUT_CODE is the script to recreate the disk layout (diskrestore.sh).
-
-save_original_file "$LAYOUT_CODE"
-
-# Initialize diskrestore.sh:
+# $LAYOUT_CODE will contain the script to restore the environment.
+backup_file "$LAYOUT_CODE"
 cat <<EOF >"$LAYOUT_CODE"
 #!/bin/bash
 
@@ -21,7 +18,6 @@ set -x
 
 EOF
 
-# Populate diskrestore.sh with further code to (re)-create all disk layout components:
 all_done=
 while [ -z "$all_done" ] ; do
     # Cycle through all components and find one that can be created.

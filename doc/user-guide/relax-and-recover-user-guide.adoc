@@ -37,5 +37,3 @@ include::11-multiple-backups.adoc[]
 
 include::12-BLOCKCLONE.adoc[]
 
-include::13-tcg-opal-support.adoc[]
-
